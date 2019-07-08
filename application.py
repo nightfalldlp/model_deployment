@@ -3,60 +3,51 @@
 
 ### Some pakages are needed,
 ### Tensorflow, keras, and flask
-### If you don't know how to install these, please go to their official website
+### If you are unfamiliar with how to install these, please go to their official website
+
 import pickle
 import tensorflow as tf
-from flask import Flask,request,jsonify
+from flask import Flask, request, jsonify
 from keras.models import model_from_json
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import load_model
 
 
-## assume packages are installed, and the first step would be make a Flask object.
+# Assume packages are installed, and the first step would be to make a Flask object
 application = Flask(__name__)
 
-## Essentially we want a simple server, meaning if we type/curl a url in a web browser/terminal, we want to see something return back.
+# Example 1: GET request
+# To quickly test the flask application, we want to create a route for a simple GET request
+# If we type/curl a url in a web browser/terminal, we want to see something return back.
 
-## This would be simplest example for this type of communication, where
-## application.route is a decorator that tells you where you could see designed content.
-## in this case, if we run the whole script, you could see "why r you so beautiful" under http://127.0.0.1:5000/
+# This would be the simplest test example
+# application.route is a decorator that route any traffic to '/' to call the function running
+# in this case, if we curl http://127.0.0.1:5000/, you could see "Testing the landing page! This worked" under 
 @application.route('/',methods=['GET'])
 def running():
-    return "why r u so beautiful?"
+    return "Testing the landing page! This worked"
 
-# skip this
-# @application.route('/query-example')
-# def query_example():
-# 	lang = request.args.get('language')
-# 	if lang is None:
-# 		return 'There is nothing'
-# 	return lang
-
-
-## second exmaple, POST request: while GET request is just you give a url and the server directly return what they have there
-## A Post request will ask you turn apply a input, such that the server takes the input and return u the designed output.
-## In our example, if you want to deploy a deep learning model, you definitely want a custimized input, thus we need this POST request
-## Similar to GET request, we'll specify url component first in as /json-exmaple just to distinguish previous /
-## we change methods to POST this time and try to read from as json format by request.get_json() or request.json
-## Then we get fiels message and return it back
+# Example 2: POST request
+# A Post request will send parameters in the post body as opposed to in the URL as with GET request. 
+# In our example, if you want to deploy a deep learning model it will be easier and more secure to send parameter via a POST body
+# We'll specify a route, json-example, just to distinguish it from the previous example
+# We can get the information in the body by calling request.get_json() or request.json
+# Then we create a response message and return it back
 @application.route('/json-example',methods=['POST'])
 def jsonexmaple():
 	req_data = request.get_json(force=True)
 	msg = req_data.get('message')
-
 	out = {'output':msg}
 	return jsonify(out)
-## Once you run this server, you should be able to curl it in terminal via
-## curl -X POST http://127.0.0.1:5000/json-example -d '{"message":"this is a message"}'
+# Once you run this server, you should be able to curl it in terminal via
+# curl -X POST http://127.0.0.1:5000/json-example -d '{"message":"this is a message"}'
 
-#### Third Example Using keras to run inference, this time we'll add keras exmaple
-#### loading your keras model, in this case we need both tokenizer and model.
+# Example 3: Model Inference
+# In this example we'll use a keras model for inference
+# Load  your model and any other preprocessing dependencies(tokenizer) in the global scope so that it is cache in memory
 with open('./dumps/tokenizer.pkl','rb') as f:
 	tokenizer = pickle.load(f)
-
-# with open('./dumps/model_json.json','rb') as f:
-# 	model_json = f.read()
-
+	
 def get_model():
 	# global model
 	model = load_model('./dumps/whole_model.h5')
@@ -65,7 +56,7 @@ def get_model():
 
 model = get_model()
 
- ## application is similar to last example, the only thing differs is we'll need a model inference part
+## This is the main route to perform the inference. 
 @application.route('/keras-example',methods=['POST'])
 def keras_exmample():
 	req_data = request.json
